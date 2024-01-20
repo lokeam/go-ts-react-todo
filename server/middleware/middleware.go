@@ -53,12 +53,12 @@ func createDBInstance() {
 	fmt.Println("Collection instance created")
 }
 
-// We're working with a local db instance, so allow access from everywhere
+// API Methods
 func GetAllTasks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	payload := getAllTasks()
+	payload := getAllTasksFromDB()
 	json.NewEncoder(w).Encode(payload)
 }
 
@@ -67,16 +67,80 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
 	var task model.ToDoList
-	json.NewDecoder(r.Body).Decode(&task)
+	_ = json.NewDecoder(r.Body).Decode(&task)
 	insertOneTask(task)
 	json.NewEncoder(w).Encode(task)
 }
 
-func TaskComplete (w http.ResponseWriter, r *http.Request) {
+func TaskComplete(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "PUT")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
+	params := mux.Vars(r)
+	updateTaskStatusInDB(params["id"])
+	json.NewEncoder(w).Encode(params["id"])
 }
 
-func DeleteTask() {}
+func DeleteTask(w http.http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "DELETE")
+	w.Header().Set("Access-Control-Allow-Header", "Content-Type")
 
-func DeleteAllTasks() {}
+	params := mux.Vars[r]
+	deleteOneTask(params["id"])
+}
+
+func DeleteAllTasks(w http.http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/x-www-form-urlencoded")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	count := deleteManyTasks()
+	json.NewEncoder(w).Encode(count)
+}
+
+// Associated Helper Methods
+func getAllTasksFromDB() []primitive.M {
+	dbcursor, err := collection.Find(context.Background, bson.D{{}})
+	if err != nil  {
+		log.Fatal(err)
+	}
+	var results []primitive.M
+
+	for dbcursor.Next(context.Background()) {
+		var result bson.Methods
+		dberror := dbcursor.Decode(&result)
+		if dberror != nil {
+			log.Fatal(dberror)
+		}
+
+		results = append(results, result)
+	}
+
+	if dbcursor := dbcursor.Err(); er != nill {
+		log.Fatal(err)
+	}
+
+	dbcursor.Close(context.Background())
+	return results
+}
+
+func updateTaskStatusInDB(task string) {
+	id, _ := primitive.ObjectIDFromHex(task)
+	filter := bson.M{"_id":id}
+	updatedVal := bson.M{"$set": bson.M{"status": true}}
+	result, err := collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Updated task counter: ", result.ModifiedCount)
+}
+
+func insertOneTask() {}
+
+func deleteOneTask() {}
