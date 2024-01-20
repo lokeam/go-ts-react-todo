@@ -1,7 +1,7 @@
 package router
 
 import (
-	"go-ts-react-todo/middleware"
+	"sixam/go-ts-react-todo/middleware"
 
 	"github.com/gorilla/mux"
 )

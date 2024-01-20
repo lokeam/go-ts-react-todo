@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"go-ts-react-todo/router"
 	"log"
 	"net/http"
+	"sixam/go-ts-react-todo/router"
 )
 
 func main() {
